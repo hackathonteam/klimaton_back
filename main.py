@@ -2,6 +2,8 @@ from fastapi import FastAPI, File, UploadFile
 from typing import List, Dict, Optional
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
+from data_preprocessing import preprocess
+import pandas as pd
 
 app = FastAPI()
 
@@ -19,7 +21,8 @@ app.add_middleware(
 
 @app.post('/calc')
 async def calc_all():
-    return "essa z calc_all"
+    data: pd.DataFrame = preprocess()
+    return data.to_json()
 
 @app.post("/upload")
 async def create_upload_file(
