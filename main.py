@@ -23,25 +23,35 @@ async def calc_all():
 
 @app.post("/upload")
 async def create_upload_file(
-    file1: bytes = File(None),
-    file2: bytes = File(None),
-    file3: bytes = File(None),
-    file4: bytes = File(None),
-    file5: bytes = File(None),
-    file6: bytes = File(None),
-    file7: bytes = File(None),
-    file8: bytes = File(None)
+    declaredSewage: bytes = File(None),
+    realSewage: bytes = File(None),
+    waterConsumption: bytes = File(None),
+    companies: bytes = File(None),
+    meters: bytes = File(None),
+    sewageReception: bytes = File(None),
+    residents: bytes = File(None),
+    containers: bytes = File(None)
     ):
 
+# declaredSewage
+# realSewage
+# waterConsumption
+# companies
+# meters
+# sewageReception
+# residents
+# containers
+
+
     files = (
-        ('nazwa1', file1),
-        ('nazwa2', file2),
-        ('nazwa3', file3),
-        ('nazwa4', file4),
-        ('nazwa5', file5),
-        ('nazwa6', file6),
-        ('nazwa7', file7),
-        ('nazwa8', file8))
+        ('declared_sewage',declaredSewage),
+        ('real_sewage',realSewage),
+        ('water_consumption',waterConsumption),
+        ('companies',companies),
+        ('meters',meters),
+        ('sewage_reception',sewageReception),
+        ('residents',residents),
+        ('containers',containers))
 
 
     for name, file in files:
