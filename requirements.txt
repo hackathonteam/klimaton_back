@@ -1,0 +1,5 @@
+fastapi
+python-multipart
+uvloop
+httptools==0.1.*
+fastapi-socketio
