@@ -32,6 +32,8 @@ app.add_middleware(
 async def get_all_containers():
     with open("./message.txt") as f:
         data = json.load(f)
+
+
     with open("./data/location_data.json") as f:
         location_data = json.load(f)
     for v in location_data:
