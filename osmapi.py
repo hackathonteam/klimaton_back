@@ -17,4 +17,6 @@ async def getLocation(street_name: str) -> Location_Type:
     numery = "".join(tab[1:])
     query_str = f"Gniezno {numery} {tab[0]}"
     ret: Location = api(user_agent="klimaton-fg").geocode(query_str, exactly_one=True)
-    return (ret.latitude, ret.longitude, query_str)
+    if not ret:
+        return None
+    return (ret.latitude, ret.longitude, street_name)

@@ -67,7 +67,7 @@ def group_by_id(dekl_vs_odb):
     sum_vs = dekl_vs_odb.groupby("id").sum()
     sum_vs["Nr rejestracyjny pojazdu"] = dekl_vs_odb.groupby("id").min()["Nr pojazdu\n* nr rejestracyjny"]
     sum_vs["Adres"] = dekl_vs_odb.groupby("id").max()["adres"]
-    sum_vs["Data odbioru ścieków"] = dekl_vs_odb.groupby("id").max()["Data odbioru ścieków"]
+    sum_vs["Data odbioru ścieków"] = dekl_vs_odb.groupby("id").max()["Data odbioru ścieków"].astype(str)
     sum_vs["Różnica"] = sum_vs[sum_vs.columns[1]] - sum_vs[sum_vs.columns[0]]
     sum_vs = sum_vs.sort_values("Różnica", ascending=False)
     # rename columns and change order
@@ -82,8 +82,9 @@ def group_by_id(dekl_vs_odb):
 
 
 def get_truck_data():
-    odebrane, deklarowane = get_data("./data/07odbior_nr_przejazdu.xlsx", "./data/06deklarowane.xlsx")
+    odebrane, deklarowane = get_data("./data/sewageReception.xlsx", "./data/declaredSewage.xlsx")
     odebrane, deklarowane = data_preprocessing(odebrane, deklarowane)
     return group_by_id(join_table(odebrane, deklarowane))
 
-print(get_truck_data())
+# print(get_truck_data())
+# odebrane.iloc[i, 2] += '|' + odebrane.iloc[i - 1, 2]

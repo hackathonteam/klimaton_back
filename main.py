@@ -6,8 +6,10 @@ import pandas as pd
 from datetime import datetime as dt
 import json
 from pydantic import BaseModel
+from pandas import io
 
 from data_processing import preprocess
+import trucks_data
 import osmapi
 
 
@@ -26,52 +28,18 @@ app.add_middleware(
 )
 
 
-@app.get('/location')
-async def mock_location():
-    ret = RedirectResponse(url='/location/mock')
-    return ret
-
-
-@app.get('/location/{loc_str}')
-async def location(loc_str: str, body: Optional[List[str]] = Body(None)):
-    loc_list: List[osmapi.location_return_type] = []
-    if loc_str == "mock":
-        loc_list = [
-            (52.5408707, 17.6495365, 'Roosevelta 164'),
-            (52.542853, 17.6092003, 'Paczkowskiego 6'),
-            (52.5462825, 17.5640176, 'Kłeckoska 84'),
-            (52.5526451, 17.6267169, 'Zamiejska 13'),
-            (52.5389391, 17.5858096, 'Kłeckoska 96 A'),
-            (52.54179935, 17.645604900089765, 'Trzemeszeńska 2F'),
-            (52.5424377, 17.5756189, 'Kłeckoska 51'),
-            (52.5399026, 17.6166866, 'Roosevelta 131 A'),
-            (52.519692899999995, 17.574187216070108, 'Skrajna 10'),
-            (52.541709, 17.563854, 'Żerniki 6'),
-            (52.5184844, 17.5746475, 'Skrajna 11'),
-            (52.5117585, 17.5946187, 'Wrzesińska 84'),
-            (52.562723, 17.6075159, 'Pomowska 14'),
-            (52.5193267, 17.5737556, 'Ludwiczaka 38'),
-            (52.535203, 17.6470747, 'Grodzka 9')
-        ]
-    else:
-        loc_list_await: List[Coroutine[Any, Any,
-                                       osmapi.location_return_type]] = []
-        if body:
-            for elem in body:
-                ret = osmapi.getLocation(elem)
-                if ret:
-                    loc_list_await.append(ret)
-                else:
-                    loc_list.append((52.535203, 17.6470747, elem))
-            loc_list.extend([await ret for ret in loc_list_await])
-
-    return [{"latitude": l1, "longtitude": l2, "name": name} for l1, l2, name in loc_list]
-
-
 @app.get('/containers')
 async def get_all_containers():
     with open("./message.txt") as f:
         data = json.load(f)
+    with open("./data/location_data.json") as f:
+        location_data = json.load(f)
+    for v in location_data:
+        k = v['name']
+        long = v['longtitude']
+        lat = v['latitude']
+        data[k]['longtitude'] = long
+        data[k]['lat'] = lat
     return data
 
 
@@ -124,7 +92,7 @@ async def create_upload_file(
     return None
 
 
-@ app.get('/last_modified')
+@app.get('/last_modified')
 async def last_uploaded():
     try:
         with open(f"data/modification.json") as modifictaion_file:
@@ -136,5 +104,33 @@ async def last_uploaded():
 
 @app.get('/trucks')
 async def get_all_trucks_info():
-    pass
+    # trucks_data: Dict[str, Any]
+    try:
+        with open("data/trucks_data.json","r") as f:
+            truck_data =json.load(f)
+    except Exception as e:
+        truck_data = {}
+        with open("data/trucks_data.json","w+") as f:
+            json.dump(truck_data, f)
 
+    data2 = io.json.read_json('data/trucks_data.json')
+    new_data_frame_final = trucks_data.get_truck_data().join(data2).transpose().to_json()
+    # {"id": str, "comment": str, "checked": bool}
+
+    essa = [{**value,  **{"id":key}} for key, value in json.loads(new_data_frame_final).items()]
+    return essa
+
+@app.post('/location')
+async def location(loc_str: str, body: Optional[List[str]] = Body(None)):
+    loc_list: List[osmapi.Location_Type] = []
+    loc_list_await: List[Coroutine[Any, Any,osmapi.Location_Type]] = []
+    if body:
+        for elem in body:
+            ret = osmapi.getLocation(elem)
+            if ret:
+                loc_list_await.append(ret)
+            else:
+                loc_list.append((52.535203, 17.6470747, elem))
+        loc_list.extend([await ret for ret in loc_list_await if ret is not None])
+
+    return [{"latitude": x[0], "longtitude": x[1], "name": x[2]} for x in loc_list if x is not None]
