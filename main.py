@@ -2,7 +2,7 @@ from fastapi import FastAPI, File, UploadFile
 from typing import List, Dict, Optional
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
-from data_preprocessing import preprocess
+from data_processing import preprocess
 import pandas as pd
 
 app = FastAPI()
