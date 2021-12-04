@@ -18,12 +18,13 @@ def getLocation(street_name: str) -> location_return_type:
     Returns None if it wasn't found, Tuple of (latitude, longtitude) if was found
     """
     tab = street_name.split(" ")
-    query_str = f"Gniezno {tab[1:]} {tab[0]}"
+    numery = "".join(tab[1:])
+    query_str = f"Gniezno {numery} {tab[0]}"
     ret: Union[None, Location] = api(user_agent="klimaton-fg").geocode(query_str, exactly_one=True)
     if not ret:
         return None
     else:
-        return (ret.latitude, ret.longitude)
+        return (ret.latitude, ret.longitude, query_str)
 
 #%%
 
