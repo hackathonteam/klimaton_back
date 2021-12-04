@@ -63,7 +63,7 @@ async def location(loc_str: str, body: Optional[List[str]] = Body(None)):
                     loc_list.append((52.535203, 17.6470747,elem))
             loc_list.extend([await ret for ret in loc_list_await])
 
-    return {'data':{"latitude": l1 ,"longtitude": l2,"name": name } for l1,l2,name in loc_list}
+    return [{"latitude": l1 ,"longtitude": l2,"name": name } for l1,l2,name in loc_list]
 
 @app.get('/containers')
 async def get_all_containers():
