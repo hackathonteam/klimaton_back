@@ -22,7 +22,7 @@ app.add_middleware(
 @app.post('/calc')
 async def calc_all():
     data: pd.DataFrame = preprocess()
-    return data.to_json()
+    return "hej"
 
 @app.post("/upload")
 async def create_upload_file(
