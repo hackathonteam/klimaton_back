@@ -10,11 +10,6 @@ def get_data(path1, path2):
 
 # ! highly dependent on data having correct structure
 def data_preprocessing(odebrane, deklarowane):
-    # delete nan and rows that are only in one table
-    deklarowane = deklarowane.drop(labels=[70, 113], axis=0)
-    odebrane = odebrane.iloc[:143, :]
-    deklarowane = deklarowane.iloc[:143, :]
-
     # fill nan with zeroes in odebrane
     odebrane = odebrane.fillna(0)
 
@@ -45,8 +40,6 @@ def data_preprocessing(odebrane, deklarowane):
     for i in range(odebrane.shape[0]):
         odebrane.iloc[i, 11].extend(list(odebrane.iloc[i, 2].split('|')))
 
-    # uzpuełnij zera w deklaracjach firm
-    deklarowane.iloc[111:115, 5] = deklarowane.iloc[111:115, 4]
     return odebrane, deklarowane
 
 
@@ -71,20 +64,20 @@ def group_by_id(dekl_vs_odb):
     sum_vs["Różnica"] = sum_vs[sum_vs.columns[1]] - sum_vs[sum_vs.columns[0]]
     sum_vs = sum_vs.sort_values("Różnica", ascending=False)
     # rename columns and change order
-    sum_vs = sum_vs.rename(columns={'Ilość odprowadzonych ścieków\n[m3]x1000': 'Real_sewage',
-                                    'Ścieki deklarowane przez firmę': 'Declared_sewage',
-                                    'Nr rejestracyjny pojazdu': 'Plates',
-                                    'Adres': 'Address',
-                                    'Data odbioru ścieków': 'Collection_date',
-                                    'Różnica': 'Difference'})
-    sum_vs = sum_vs[['Plates', 'Collection_date', 'Address', sum_vs.columns[1], 'Real_sewage', 'Difference']]
-    return sum_vs.where(sum_vs["Difference"] != 0).dropna(axis=0)
+    sum_vs = sum_vs.rename(columns={'Ilość odprowadzonych ścieków\n[m3]x1000': 'realSewage',
+                                    'Ścieki deklarowane przez firmę': 'declaredSewage',
+                                    'Nr rejestracyjny pojazdu': 'plates',
+                                    'Adres': 'address',
+                                    'Data odbioru ścieków': 'collectionDate',
+                                    'Różnica': 'difference'})
+    sum_vs = sum_vs[['plates', 'collectionDate', 'address', sum_vs.columns[1], 'realSewage', 'difference']]
+    return sum_vs.where(sum_vs["difference"] != 0).dropna(axis=0)
 
 
 def get_truck_data():
     odebrane, deklarowane = get_data("./data/sewageReception.xlsx", "./data/declaredSewage.xlsx")
     odebrane, deklarowane = data_preprocessing(odebrane, deklarowane)
-    return group_by_id(join_table(odebrane, deklarowane))
+    return group_by_id(join_table(odebrane, deklarowane)).transpose()
 
 # print(get_truck_data())
 # odebrane.iloc[i, 2] += '|' + odebrane.iloc[i - 1, 2]
