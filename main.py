@@ -8,8 +8,8 @@ import json
 from pydantic import BaseModel
 from pandas import io
 
-from data_processing import preprocess
 import trucks_data
+import citizens_data
 import osmapi
 
 
@@ -30,18 +30,18 @@ app.add_middleware(
 
 @app.get('/containers')
 async def get_all_containers():
-    with open("./message.txt") as f:
-        data = json.load(f)
+    data = citizens_data.create_map_datapoints(citizens_data.generate_df())
 
 
-    with open("./data/location_data.json") as f:
-        location_data = json.load(f)
-    for v in location_data:
-        k = v['name']
-        long = v['longtitude']
-        lat = v['latitude']
-        data[k]['longtitude'] = long
-        data[k]['lat'] = lat
+    # with open("./data/location_data.json") as f:
+    #     location_data = json.load(f)
+
+    # for v in location_data:
+    #     k = v['name']
+    #     long = v['longtitude']
+    #     lat = v['latitude']
+    #     data[k]['longtitude'] = long
+    #     data[k]['lat'] = lat
     return data
 
 
