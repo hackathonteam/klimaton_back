@@ -73,8 +73,12 @@ async def create_upload_file(
 
     current_date = dt.now().strftime("%d-%m-%Y %H:%M")
 
-    with open('data/modification.json') as modifictaion_file:
-        json_data: Dict[str,Any] = json.load(modifictaion_file)
+    json_data: Dict[str,Any]
+    try:
+        with open('data/modification.json',"r+") as modifictaion_file:
+            json_data = json.load(modifictaion_file)
+    except Exception as e:
+        json_data = {}
 
     for name, file, json_name in files:
         if (file):
