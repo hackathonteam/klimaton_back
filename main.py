@@ -112,10 +112,10 @@ async def create_upload_file(
         json_data = {}
 
     current_date = dt.now().strftime("%d-%m-%Y %H:%M")
-    for name, file, json_name in files:
+    for file, json_name in files:
         if (file):
             json_data[json_name] = current_date
-            with open(f"data/{name}.xlsx", "wb+") as buffer:
+            with open(f"data/{json_name}.xlsx", "wb+") as buffer:
                 buffer.write(file)
 
     with open('data/modification.json', 'w+') as modifictaion_file:
@@ -131,3 +131,10 @@ async def last_uploaded():
             return json.load(modifictaion_file)
     except Exception:
         return {}
+
+# ciezaruwy
+
+@app.get('/trucks')
+async def get_all_trucks_info():
+    pass
+

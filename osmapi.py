@@ -1,15 +1,11 @@
-#%%
-
 from typing import Tuple, Union
 import geopy
 from geopy.geocoders import Nominatim as api
 from geopy.location import Location
 
+Location_Type = Tuple[float, float, str]
 
-#%%
-
-location_return_type = Tuple[float, float, str]
-async def getLocation(street_name: str) -> location_return_type:
+async def getLocation(street_name: str) -> Location_Type:
     """
     Street name in format that was given is `name` `number` `letter(A/B)`
     Api works best with `Gniezno number letter name`
@@ -22,25 +18,3 @@ async def getLocation(street_name: str) -> location_return_type:
     query_str = f"Gniezno {numery} {tab[0]}"
     ret: Location = api(user_agent="klimaton-fg").geocode(query_str, exactly_one=True)
     return (ret.latitude, ret.longitude, query_str)
-
-#%%
-
-
-if __name__ == __name__:
-    print(getLocation("Roosevelta 164"))
-    print(getLocation("Paczkowskiego 6"))
-    print(getLocation("Kłeckoska 84"))
-    print(getLocation("Zamiejska 13"))
-    print(getLocation("Kłeckoska 96 A"))
-    print(getLocation("Trzemeszeńska 2F"))
-    print(getLocation("Kłeckoska 51"))
-    print(getLocation("Roosevelta 131 A"))
-    print(getLocation("Skrajna 10"))
-    print(getLocation("Żerniki 6"))
-    print(getLocation("Skrajna 11"))
-    print(getLocation("Wrzesińska 84"))
-    print(getLocation("Pomowska 14"))
-    print(getLocation("Ludwiczaka 38"))
-    print(getLocation("Grodzka 9"))
-
-# %%
