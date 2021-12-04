@@ -19,6 +19,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get('/location')
+async def mock_location():
+    dane = [
+    (52.5408707, 17.6495365, 'Roosevelta 164'),
+    (52.542853, 17.6092003, 'Paczkowskiego 6'),
+    (52.5462825, 17.5640176, 'Kłeckoska 84'),
+    (52.5526451, 17.6267169, 'Zamiejska 13'),
+    (52.5389391, 17.5858096, 'Kłeckoska 96 A'),
+    (52.54179935, 17.645604900089765, 'Trzemeszeńska 2F'),
+    (52.5424377, 17.5756189, 'Kłeckoska 51'),
+    (52.5399026, 17.6166866, 'Roosevelta 131 A'),
+    (52.519692899999995, 17.574187216070108, 'Skrajna 10'),
+    (52.541709, 17.563854, 'Żerniki 6'),
+    (52.5184844, 17.5746475, 'Skrajna 11'),
+    (52.5117585, 17.5946187, 'Wrzesińska 84'),
+    (52.562723, 17.6075159, 'Pomowska 14'),
+    (52.5193267, 17.5737556, 'Ludwiczaka 38'),
+    (52.535203, 17.6470747, 'Grodzka 9')
+        ]
+    return {'data':[{"latitude": l1 ,"longtitude": l2,"name": name } for l1,l2,name in dane]}
+
+
 @app.post('/calc')
 async def calc_all():
     data: pd.DataFrame = preprocess()
