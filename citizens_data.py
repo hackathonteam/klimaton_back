@@ -10,6 +10,13 @@ import random
 pd.options.mode.chained_assignment = None  
 
 def generate_df():
+    # zuzycie01_raw = pd.read_excel("data/waterConsumption.xlsx")
+    # zbiorniki02_raw = pd.read_excel("data/containers.xlsx")
+    # liczniki03_raw = pd.read_excel("data/meters.xlsx")
+    # firmy04_raw = pd.read_excel("data/companies.xlsx")
+    # osoby05_raw = pd.read_excel("data/residents.xlsx")
+    # deklarowane06_raw = pd.read_excel("data/declaredSewage.xlsx")
+
     zuzycie01_raw = pd.read_excel("data/01zuzycie.xlsx")
     zbiorniki02_raw = pd.read_excel("data/02zbiorniki.xlsx")
     liczniki03_raw = pd.read_excel("data/03liczniki.xlsx")
@@ -113,23 +120,6 @@ def generate_df():
 
     df['pobrana_woda'] = dane_koncowe['srednie_zuzucie_wody']
 
-    # drop that is controversial - experimental
-    df_bez_zbiornikow = df.drop(['adres_licznika'], axis = 1)
-
-    df_bez_zbiornikow['st_oddanej_do_pobranej'] = (df_bez_zbiornikow['deklaracja_mieszkaniec'] + 
-                                                    df_bez_zbiornikow['deklaracja_firma'])/2 / \
-                                                    df_bez_zbiornikow['pobrana_woda']
-
-    df_bez_zbiornikow['deficyt_litrow'] = df_bez_zbiornikow['pobrana_woda'] - \
-                                        (df_bez_zbiornikow['deklaracja_mieszkaniec'] + \
-                                        df_bez_zbiornikow['deklaracja_firma'])/2 
-                                                    
-
-    # get dummy variables for licz_os_dekl
-    df_bez_zbiornikow = pd.get_dummies(df_bez_zbiornikow)
-
-    df_bez_zbiornikow = df_bez_zbiornikow.sort_values(by="deficyt_litrow", ascending = False)
-
     df_new = df.copy()
 
     df_new['st_oddanej_do_pobranej'] = (df['deklaracja_mieszkaniec'] + 
@@ -192,16 +182,17 @@ def generate_df():
 # uwaga df_for_api musi być zrobione ,zeby funkcja działała - mozna potem zmaknąć całą analizę z góry
 # w funkcje w stylu prepare_data
 def create_map_datapoints(df_for_api):
-    data_list = {}
+    data_dict = {}
     for index, row in df_for_api.iterrows():
         row_dict = {}
 
-        row_dict['nr_zbiornika'] = random.choice("ABCDEFGHIJKL") + str(int(random.uniform(10000, 99999)//1))
-        
-        row_dict['st_oddanej_do_pobranej'] = row['st_oddanej_do_pobranej']        
+        if not np.isnan(row['st_oddanej_do_pobranej']): 
+            row_dict['nr_zbiornika'] = random.choice("ABCDEFGHIJKL") + str(int(random.uniform(10000, 99999)//1))
+            
+            row_dict['st_oddanej_do_pobranej'] = row['st_oddanej_do_pobranej']        
 
-        data_list[row['adres_licznika']] = row_dict
-    return data_list
+        data_dict[row['adres_licznika']] = row_dict
+    return data_dict
 
 def create_pobrana_woda_timeseries(nr_zbiornika: str, df_for_api):
     graph = {}
@@ -213,4 +204,7 @@ def create_pobrana_woda_timeseries(nr_zbiornika: str, df_for_api):
     
     print(data)
     
-    
+
+
+df = generate_df()
+print(create_map_datapoints(df))
