@@ -33,17 +33,27 @@ async def get_all_containers():
     data = citizens_data.create_map_datapoints(citizens_data.generate_df())
 
 
-    # with open("./data/location_data.json") as f:
-    #     location_data = json.load(f)
+    with open("./data/location_data.json") as f:
+        location_data = json.load(f)
 
-    # for v in location_data:
-    #     k = v['name']
-    #     long = v['longtitude']
-    #     lat = v['latitude']
-    #     data[k]['longtitude'] = long
-    #     data[k]['lat'] = lat
+    for v in location_data:
+        k = v['name']
+        long = v['longtitude']
+        lat = v['latitude']
+        data[k]['longtitude'] = long
+        data[k]['latitude'] = lat
+
+    data = [{**{'id':key}, **value} for key, value in data.items()]
     return data
 
+@app.get('/containers/default')
+async def get_containers_default():
+    return get_containers_higher_than_percent(0.7)
+
+@app.get('/containers/{precent}')
+async def get_containers_higher_than_percent(percent: float):
+    data = list(filter(lambda x: x and x != {} and 'st_oddanej_do_pobranej' in x and x['st_oddanej_do_pobranej'] < percent, await get_all_containers()))
+    return data
 
 @app.get('/containers/graphs/{id}/{graph_name}')
 async def get_graph_by_id_graph_name(graph_name: str, id: str):
