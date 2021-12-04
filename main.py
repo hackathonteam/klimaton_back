@@ -78,7 +78,7 @@ async def get_all_containers():
 @app.get('/containers/graphs/{id}/{graph_name}')
 async def get_graph_by_id_graph_name(graph_name: str, id: str):
     data = {"name": graph_name, "title": "Pobrana woda na przestrzeni czasu", "data": [
-        {'date': "2019-09", 'value': 10}, {'date': "2019-10", 'value': 11}, {'date': "2019-11", 'value': 14}, {'date': "2019-12", 'value': 15}]}
+        {'date': "2019-09", 'water': 10, 'sewage': 15}, {'date': "2019-10", 'water': 11, 'sewage': 20}, {'date': "2019-11", 'water': 14, 'sewage': 20}, {'date': "2019-12", 'water': 15, 'sewage': 20}]}
     return data
 
 
