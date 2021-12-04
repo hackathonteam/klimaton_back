@@ -1,9 +1,12 @@
 from fastapi import FastAPI, File, UploadFile
-from typing import List, Dict, Optional
+from typing import Any, List, Dict, Optional
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
 from data_processing import preprocess
 import pandas as pd
+from datetime import datetime as dt
+import json
+
 
 app = FastAPI()
 
@@ -58,31 +61,45 @@ async def create_upload_file(
     containers: bytes = File(None)
     ):
 
-# declaredSewage
-# realSewage
-# waterConsumption
-# companies
-# meters
-# sewageReception
-# residents
-# containers
+    files = [
+        ('declared_sewage',declaredSewage, "declaredSewage"),
+        ('real_sewage',realSewage, 'realSewage'),
+        ('water_consumption',waterConsumption, 'waterConsumption'),
+        ('companies',companies,'companies'),
+        ('meters',meters,'meters'),
+        ('sewage_reception',sewageReception,'sewageReception'),
+        ('residents',residents,'residents'),
+        ('containers',containers,'containers')]
 
+    current_date = dt.now().strftime("%d-%m-%Y %H:%M")
 
-    files = (
-        ('declared_sewage',declaredSewage),
-        ('real_sewage',realSewage),
-        ('water_consumption',waterConsumption),
-        ('companies',companies),
-        ('meters',meters),
-        ('sewage_reception',sewageReception),
-        ('residents',residents),
-        ('containers',containers))
+    with open('data/modification.json') as modifictaion_file:
+        json_data: Dict[str,Any] = json.load(modifictaion_file)
 
-
-    for name, file in files:
+    for name, file, json_name in files:
         if (file):
+            json_data[json_name] = current_date
             with open(f"data/{name}.xlsx","wb+") as buffer:
                 buffer.write(file)
 
+    with open('data/modification.json', 'w+') as modifictaion_file:
+        json.dump(json_data, modifictaion_file)
+
+
     ret = RedirectResponse(url='/calc')
     return ret
+
+
+@app.get('/last_modified')
+async def last_uploaded():
+    # declaredSewage
+    # realSewage
+    # waterConsumption
+    # companies
+    # meters
+    # sewageReception
+    # residents
+    # containers
+    with open(f"data/modification.json") as modifictaion_file:
+        return json.load(modifictaion_file)
+
