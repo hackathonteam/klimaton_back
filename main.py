@@ -25,6 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get('/location')
 async def mock_location():
     ret = RedirectResponse(url='/location/mock')
@@ -36,34 +37,36 @@ async def location(loc_str: str, body: Optional[List[str]] = Body(None)):
     loc_list: List[osmapi.location_return_type] = []
     if loc_str == "mock":
         loc_list = [
-        (52.5408707, 17.6495365, 'Roosevelta 164'),
-        (52.542853, 17.6092003, 'Paczkowskiego 6'),
-        (52.5462825, 17.5640176, 'Kłeckoska 84'),
-        (52.5526451, 17.6267169, 'Zamiejska 13'),
-        (52.5389391, 17.5858096, 'Kłeckoska 96 A'),
-        (52.54179935, 17.645604900089765, 'Trzemeszeńska 2F'),
-        (52.5424377, 17.5756189, 'Kłeckoska 51'),
-        (52.5399026, 17.6166866, 'Roosevelta 131 A'),
-        (52.519692899999995, 17.574187216070108, 'Skrajna 10'),
-        (52.541709, 17.563854, 'Żerniki 6'),
-        (52.5184844, 17.5746475, 'Skrajna 11'),
-        (52.5117585, 17.5946187, 'Wrzesińska 84'),
-        (52.562723, 17.6075159, 'Pomowska 14'),
-        (52.5193267, 17.5737556, 'Ludwiczaka 38'),
-        (52.535203, 17.6470747, 'Grodzka 9')
-            ]
+            (52.5408707, 17.6495365, 'Roosevelta 164'),
+            (52.542853, 17.6092003, 'Paczkowskiego 6'),
+            (52.5462825, 17.5640176, 'Kłeckoska 84'),
+            (52.5526451, 17.6267169, 'Zamiejska 13'),
+            (52.5389391, 17.5858096, 'Kłeckoska 96 A'),
+            (52.54179935, 17.645604900089765, 'Trzemeszeńska 2F'),
+            (52.5424377, 17.5756189, 'Kłeckoska 51'),
+            (52.5399026, 17.6166866, 'Roosevelta 131 A'),
+            (52.519692899999995, 17.574187216070108, 'Skrajna 10'),
+            (52.541709, 17.563854, 'Żerniki 6'),
+            (52.5184844, 17.5746475, 'Skrajna 11'),
+            (52.5117585, 17.5946187, 'Wrzesińska 84'),
+            (52.562723, 17.6075159, 'Pomowska 14'),
+            (52.5193267, 17.5737556, 'Ludwiczaka 38'),
+            (52.535203, 17.6470747, 'Grodzka 9')
+        ]
     else:
-        loc_list_await :List[Coroutine[Any,Any,osmapi.location_return_type]] = []
+        loc_list_await: List[Coroutine[Any, Any,
+                                       osmapi.location_return_type]] = []
         if body:
             for elem in body:
                 ret = osmapi.getLocation(elem)
                 if ret:
                     loc_list_await.append(ret)
                 else:
-                    loc_list.append((52.535203, 17.6470747,elem))
+                    loc_list.append((52.535203, 17.6470747, elem))
             loc_list.extend([await ret for ret in loc_list_await])
 
-    return [{"latitude": l1 ,"longtitude": l2,"name": name } for l1,l2,name in loc_list]
+    return [{"latitude": l1, "longtitude": l2, "name": name} for l1, l2, name in loc_list]
+
 
 @app.get('/containers')
 async def get_all_containers():
@@ -72,21 +75,14 @@ async def get_all_containers():
     return data
 
 
-
 @app.get('/containers/graphs/{id}/{graph_name}')
 async def get_graph_by_id_graph_name(graph_name: str, id: str):
-    data = {"name": graph_name,"title": "Pobrana woda na przestrzeni czasu","data": {"2019-09": 10,"2019-10": 11,"2019-11": 14,"2019-12": 15,}}
-    copy_date = data['data'].items()
-    data['data'] = {}
-    for k,v in copy_date:
-        elem = dt.strptime(k,"%Y-%m").strftime("%Y-%m")
-        data['data'][elem] = v
+    data = {"name": graph_name, "title": "Pobrana woda na przestrzeni czasu", "data": [
+        {'date': "2019-09", 'value': 10}, {'date': "2019-10", 'value': 11}, {'date': "2019-11", 'value': 14}, {'date': "2019-12", 'value': 15}]}
     return data
 
 
-
-
-@app.post("/upload", status_code = 200)
+@ app.post("/upload", status_code=200)
 async def create_upload_file(
     declaredSewage: bytes = File(None),
     realSewage: bytes = File(None),
@@ -96,22 +92,21 @@ async def create_upload_file(
     sewageReception: bytes = File(None),
     residents: bytes = File(None),
     containers: bytes = File(None)
-    ):
+):
 
     files = [
         (declaredSewage, "declaredSewage"),
         (realSewage, 'realSewage'),
         (waterConsumption, 'waterConsumption'),
-        (companies,'companies'),
-        (meters,'meters'),
-        (sewageReception,'sewageReception'),
-        (residents,'residents'),
-        (containers,'containers')]
+        (companies, 'companies'),
+        (meters, 'meters'),
+        (sewageReception, 'sewageReception'),
+        (residents, 'residents'),
+        (containers, 'containers')]
 
-
-    json_data: Dict[str,Any]
+    json_data: Dict[str, Any]
     try:
-        with open('data/modification.json',"r+") as modifictaion_file:
+        with open('data/modification.json', "r+") as modifictaion_file:
             json_data = json.load(modifictaion_file)
     except Exception as e:
         json_data = {}
@@ -120,7 +115,7 @@ async def create_upload_file(
     for name, file, json_name in files:
         if (file):
             json_data[json_name] = current_date
-            with open(f"data/{name}.xlsx","wb+") as buffer:
+            with open(f"data/{name}.xlsx", "wb+") as buffer:
                 buffer.write(file)
 
     with open('data/modification.json', 'w+') as modifictaion_file:
@@ -129,11 +124,10 @@ async def create_upload_file(
     return None
 
 
-@app.get('/last_modified')
+@ app.get('/last_modified')
 async def last_uploaded():
     try:
         with open(f"data/modification.json") as modifictaion_file:
             return json.load(modifictaion_file)
     except Exception:
         return {}
-
