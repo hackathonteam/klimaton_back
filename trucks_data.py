@@ -10,11 +10,6 @@ def get_data(path1, path2):
 
 # ! highly dependent on data having correct structure
 def data_preprocessing(odebrane, deklarowane):
-    # delete nan and rows that are only in one table
-    # deklarowane = deklarowane.drop(labels=[70, 113], axis=0)
-    # odebrane = odebrane.iloc[:143, :]
-    # deklarowane = deklarowane.iloc[:143, :]
-
     # fill nan with zeroes in odebrane
     odebrane = odebrane.fillna(0)
 
@@ -45,8 +40,6 @@ def data_preprocessing(odebrane, deklarowane):
     for i in range(odebrane.shape[0]):
         odebrane.iloc[i, 11].extend(list(odebrane.iloc[i, 2].split('|')))
 
-    # uzpuełnij zera w deklaracjach firm
-    # deklarowane.iloc[111:115, 5] = deklarowane.iloc[111:115, 4]
     return odebrane, deklarowane
 
 
