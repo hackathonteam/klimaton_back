@@ -100,10 +100,9 @@ def generate_map_datapoints_df():
     waterConsumption = waterConsumption.drop(columns = ['nr_licznika', 'osoba', 'zuzycie_wody'])
     waterConsumption= waterConsumption.iloc[: , :2]
 
-    declaredSewage = declaredSewage.drop(columns = ['nr_zbiornika', 'data_odbioru', 'pobrana_woda',
+    declaredSewage = declaredSewage.drop(columns = ['data_odbioru', 'pobrana_woda',
                                                         'pobrana_woda_ogrodowa', 'nr_pojazdu'])
 
-    declaredSewage = declaredSewage.iloc[:, :3]
     declaredSewage['srednia_deklaracji'] = \
                    (declaredSewage['deklaracja_mieszkaniec'] + declaredSewage['deklaracja_firma'])/2
 
@@ -113,7 +112,7 @@ def generate_map_datapoints_df():
     df = pd.DataFrame()
 
     df['adres'] = waterConsumption['adres_licznika']
-
+    df['nr_zbiornika'] = declaredSewage['nr_zbiornika']
 
     df['st_oddanej_do_pobranej'] = declaredSewage['srednia_deklaracji'] / waterConsumption['srednie_zuzucie_wody']
 
@@ -127,7 +126,7 @@ def create_map_datapoints(df):
         row_dict = {}
 
         if not np.isnan(row['st_oddanej_do_pobranej']):
-            row_dict['nr_zbiornika'] = random.choice("ABCDEFGHIJKL") + str(int(random.uniform(10000, 99999)//1))
+            row_dict['nr_zbiornika'] = row['nr_zbiornika']
 
             row_dict['st_oddanej_do_pobranej'] = row['st_oddanej_do_pobranej']
 
@@ -230,7 +229,7 @@ def graph_amount_timeseries(df, address):
 
     graph = {}
     graph['name'] = 'quotient_timeseries'
-    graph['title'] = "m^3 wody zadeklarowanej jako ścieki i pobranej na przestrzeni miesięcy"
+    graph['title'] = "Zadeklarowane ścieki i pobrana woda"
 
     data_list = []
 
