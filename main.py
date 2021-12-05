@@ -11,6 +11,7 @@ from pandas import io
 import trucks_data
 import citizens_data
 import osmapi
+import city_data
 
 
 app = FastAPI()
@@ -26,6 +27,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get('/city/details')
+async def get_city_details():
+    return {'id':'Gniezno','ratio': city_data.get_city_ratio(), 'mean': city_data.get_mean_time(6)}
 
 
 @app.get('/containers')
