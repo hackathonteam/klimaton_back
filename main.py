@@ -74,10 +74,8 @@ class Essa(BaseModel):
     graph_name: str
     id: str
 
-@app.post('/containers/graphs/')
-async def get_graph_by_id_graph_name(va:Essa = Body(...)):
-    graph_name = va.graph_name
-    id = va.id
+@app.get('/containers/graphs/{id}/{graph_name}')
+async def get_graph_by_id_graph_name(id: str, graph_name: str):
     if graph_name == 'quotient_timeseries':
         data = citizens_data.graph_quotient_timeseries(citizens_data.generate_quotient_timeseries_df(), id)
     else:
