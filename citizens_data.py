@@ -1,7 +1,5 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 from typing import List
 from datetime import datetime as dt
 import re
@@ -230,7 +228,7 @@ def graph_amount_timeseries(df, address):
     row = df[df['adres'] == address]
     
     graph = {}
-    graph['name'] = 'quotient_timeseries'
+    graph['name'] = 'amount_timeseries'
     graph['title'] = "Zadeklarowane ścieki i pobrana woda"
     
     data_list = []
