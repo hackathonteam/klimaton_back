@@ -102,6 +102,4 @@ def group_by_id(dekl_vs_odb):
 def get_truck_data():
     odebrane, deklarowane = get_data("./data/sewageReception.xlsx", "./data/declaredSewage.xlsx")
     odebrane, deklarowane = data_preprocessing(odebrane, deklarowane)
-    return group_by_id(join_table(odebrane, deklarowane))
-
-print(get_truck_data())
+    return group_by_id(join_table(odebrane, deklarowane)).trasnpose()
