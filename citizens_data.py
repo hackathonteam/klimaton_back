@@ -48,6 +48,18 @@ Przykładowy graf ma formę:
                 {'date': '2021-06', 'pobrana': 15.0, 'deklarowana': 10.2}
             ]
 }
+
+get_details(address) - zwraca listę detali dla danego adresu
+Przykładowe szczegóły:
+[
+    {'name': 'nr_pojazdu', 'description': 'Numer pojazdu', 'value': 'PGN554HE'},
+    {'name': 'osoba','description': 'Właściciel nieruchomości','value': 'Sylwia Popłek'},
+    {'name': 'data_odbioru','description': 'Data odbioru ścieków','value': Timestamp('2021-11-02 00:00:00')},
+    {'name': 'godzina_odbioru','description': 'Godzina odbioru ścieków','value': 10.5},
+    {'name': 'godzina_zrzutu','description': 'Godzina zlewu ścieków','value': 12.0},
+    {'name': 'nazwa_firmy','description': 'Nazwa firmy','value': 'F. U. H. EKO-TRANS-Kop Usługi Asenizacyjne Mieczysław Ziętara '}
+]
+
 """
 
 
@@ -219,7 +231,6 @@ def graph_quotient_timeseries(df, address):
             data_list.append(temp_dict)
         
         
-        
     graph['data'] = data_list
     
     return graph
@@ -246,3 +257,106 @@ def graph_amount_timeseries(df, address):
     graph['data'] = data_list
     
     return graph
+
+
+def get_details(address) -> List[dict]:
+    
+    sewage_reception_raw = pd.read_excel("data/sewageReception.xlsx")
+    
+   
+    # zmiana nazw kolumn
+    sewage_reception = sewage_reception_raw.drop(['Lp.'], axis = 1)
+    c = sewage_reception.columns
+    sewage_reception = sewage_reception.rename(columns = {c[0]: 'osoba',
+                                                      c[1]: 'adres_licznika',
+                                                      c[2]: 'nr_koncesji',
+                                                      c[3]: 'nr_pojazdu',
+                                                      c[4]: 'ilosc_sciekow',
+                                                      c[5]: 'data_odbioru',
+                                                      c[6]: 'godzina_odbioru',
+                                                      c[7]: 'godzina_zrzutu',
+                                                      c[8]: 'nr_zbiornika',})
+    
+    
+    # wypełnij nan'y zerami
+    sewage_reception = sewage_reception.fillna(0)
+    
+    # uzupełnij zerowe godziny i daty zrzutu ścieków oraz nr rejestracyjne
+    for i in range(1, sewage_reception.shape[0]):
+        
+        if sewage_reception.iloc[i, 2] == 0:
+            sewage_reception.iloc[i, 2] = sewage_reception.iloc[i - 1, 2]
+        if sewage_reception.iloc[i, 3] == 0:
+            sewage_reception.iloc[i, 3] = sewage_reception.iloc[i - 1, 3]
+        if sewage_reception.iloc[i, 4] == 0:
+            sewage_reception.iloc[i, 4] = sewage_reception.iloc[i - 1, 4] 
+        if sewage_reception.iloc[i, 7] == 0:
+            sewage_reception.iloc[i, 7] = sewage_reception.iloc[i - 1, 7]
+    
+    sewage_reception = sewage_reception.drop(columns = ['nr_koncesji', 'ilosc_sciekow', 'nr_zbiornika'])
+    
+    # add company name by joining companies.xlsx by no. of vehicle
+    companies_raw = pd.read_excel("data/companies.xlsx")
+    
+   
+    # zmiana nazw kolumn
+    companies = companies_raw.drop(['Lp.'], axis = 1)
+    c = companies.columns
+    companies = companies.rename(columns = {c[0]: 'nr_koncesji',
+                                          c[1]: 'nazwa_firmy',
+                                          c[2]: 'adres_firmy',
+                                          c[3]: 'nr_pojazdu',
+                                          c[4]: 'pojemnosc_wozu'
+                                           })
+    
+    
+    companies = companies.drop(columns = ['nr_koncesji', 'adres_firmy', 'pojemnosc_wozu'])
+    
+    details = sewage_reception.set_index(['nr_pojazdu'])\
+                    .join(companies.set_index(['nr_pojazdu']))\
+                    .reset_index()
+    
+    
+    row = details[details['adres_licznika'] == address].iloc[0]
+
+    list_details = []
+    
+    info_dict = {}
+    info_dict['name'] = 'nr_pojazdu'
+    info_dict['description'] = "Numer pojazdu"
+    info_dict['value'] = row.loc['nr_pojazdu']
+    list_details.append(info_dict)
+    
+    info_dict = {}
+    info_dict['name'] = 'osoba'
+    info_dict['description'] = "Właściciel nieruchomości"
+    info_dict['value'] = row.loc['osoba']
+    list_details.append(info_dict)
+    
+    info_dict = {}
+    info_dict['name'] = 'data_odbioru'
+    info_dict['description'] = "Data odbioru ścieków"
+    info_dict['value'] = row.loc['data_odbioru']
+    list_details.append(info_dict)
+    
+    info_dict = {}
+    info_dict['name'] = 'godzina_odbioru'
+    info_dict['description'] = "Godzina odbioru ścieków"
+    info_dict['value'] = row.loc['godzina_odbioru']
+    list_details.append(info_dict)
+    
+    info_dict = {}
+    info_dict['name'] = 'godzina_zrzutu'
+    info_dict['description'] = "Godzina zlewu ścieków"
+    info_dict['value'] = row.loc['godzina_zrzutu']
+    list_details.append(info_dict)
+    
+    info_dict = {}
+    info_dict['name'] = 'nazwa_firmy'
+    info_dict['description'] = "Nazwa firmy"
+    info_dict['value'] = row.loc['nazwa_firmy']
+    list_details.append(info_dict)
+    
+    return list_details
+    
+    
