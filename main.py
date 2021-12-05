@@ -30,7 +30,7 @@ app.add_middleware(
 
 @app.get('/city/details')
 async def get_city_details():
-    return {'id':'Gniezno','ratio': city_data.get_city_ratio(), 'mean': city_data.get_mean_time(6)}
+    return {'id':'Gniezno','ratio': 0.89, 'mean': {'water_means': []}}
 
 
 @app.get('/containers')
@@ -70,8 +70,14 @@ async def get_all_data_by_id(id: str):
     data = list(filter(lambda x: x['id'] == id, data))[0]
     return data
 
-@app.get('/containers/graphs/{id}/{graph_name}')
-async def get_graph_by_id_graph_name(graph_name: str, id: str):
+class Essa(BaseModel):
+    graph_name: str
+    id: str
+
+@app.post('/containers/graphs/')
+async def get_graph_by_id_graph_name(va:Essa = Body(...)):
+    graph_name = va.graph_name
+    id = va.id
     if graph_name == 'quotient_timeseries':
         data = citizens_data.graph_quotient_timeseries(citizens_data.generate_quotient_timeseries_df(), id)
     else:
