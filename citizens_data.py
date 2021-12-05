@@ -1,7 +1,5 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 from typing import List
 from datetime import datetime as dt
 import re
@@ -20,16 +18,16 @@ i pobieranej wody
 
 
 graph_quotient_timeseries(df, address) - generuje graf dla punktu o adresie 'address' z DataFrame'a 'df'
-Przykładowy graf ma formę: 
+Przykładowy graf ma formę:
 {
     'name': 'quotient_timeseries',
     'title': 'Stosunek wody zadeklarowanej jako ścieki do pobranej na przestrzeni miesięcy',
     'data': [
-                {'date': '2021-11', 'quotient': 0.625}, 
-                {'date': '2021-10', 'quotient': 0.66875}, 
-                {'date': '2021-09', 'quotient': 0.6774193548387096}, 
-                {'date': '2021-08', 'quotient': 0.7096774193548387}, 
-                {'date': '2021-07', 'quotient': 0.7034482758620689}, 
+                {'date': '2021-11', 'quotient': 0.625},
+                {'date': '2021-10', 'quotient': 0.66875},
+                {'date': '2021-09', 'quotient': 0.6774193548387096},
+                {'date': '2021-08', 'quotient': 0.7096774193548387},
+                {'date': '2021-07', 'quotient': 0.7034482758620689},
                 {'date': '2021-06', 'quotient': 0.7310344827586207}
                 ]
 }
@@ -37,13 +35,13 @@ Przykładowy graf ma formę:
 """
 
 
-pd.options.mode.chained_assignment = None  
+pd.options.mode.chained_assignment = None
 
 def generate_map_datapoints_df():
     waterConsumption_raw = pd.read_excel("data/waterConsumption.xlsx")
-    
+
     # counting mean values to account for zeros
-    
+
     for i in range(143):
         if waterConsumption_raw.iloc[i, 6] != 0:
             for j in range(17):
@@ -56,7 +54,7 @@ def generate_map_datapoints_df():
                 waterConsumption_raw.iloc[i, 6 + j * 2] = temp / 2
                 waterConsumption_raw.iloc[i, 6 + j * 2 + 1] = temp / 2
         waterConsumption_raw.iloc[i, 40] = waterConsumption_raw.iloc[i, 39]
-    
+
     # zmiana nazw kolumn
     waterConsumption = waterConsumption_raw.drop(['Lp.'], axis = 1)
     c = waterConsumption.columns
@@ -67,9 +65,9 @@ def generate_map_datapoints_df():
                                                           c[4]: 'srednie_zuzucie_wody'})
 
     for i in range(5, len(c)-1):
-        waterConsumption = waterConsumption.rename(columns = 
+        waterConsumption = waterConsumption.rename(columns =
                                                    {c[i]: dt.strptime(str(c[i]), '%Y-%m').strftime('%Y-%m')})
-    
+
     declaredSewage_raw = pd.read_excel("data/declaredSewage.xlsx")
     declaredSewage = declaredSewage_raw.drop(['Lp.'], axis = 1)
     c = declaredSewage.columns
@@ -81,41 +79,41 @@ def generate_map_datapoints_df():
                                                       c[5]: 'pobrana_woda',
                                                       c[6]: 'pobrana_woda_ogrodowa',
                                                       c[7]: 'nr_pojazdu'})
-    
+
     # drop useless columns
     waterConsumption = waterConsumption.drop(columns = ['nr_licznika', 'osoba', 'zuzycie_wody'])
     waterConsumption= waterConsumption.iloc[: , :2]
-    
-    declaredSewage = declaredSewage.drop(columns = ['nr_zbiornika', 'data_odbioru', 'pobrana_woda', 
+
+    declaredSewage = declaredSewage.drop(columns = ['nr_zbiornika', 'data_odbioru', 'pobrana_woda',
                                                         'pobrana_woda_ogrodowa', 'nr_pojazdu'])
-    
+
     declaredSewage = declaredSewage.iloc[:, :3]
     declaredSewage['srednia_deklaracji'] = \
                    (declaredSewage['deklaracja_mieszkaniec'] + declaredSewage['deklaracja_firma'])/2
-                   
+
     declaredSewage = declaredSewage.drop(columns = ['deklaracja_firma', 'deklaracja_mieszkaniec'])
-    
-   
+
+
     df = pd.DataFrame()
-    
+
     df['adres'] = waterConsumption['adres_licznika']
-    
-    
+
+
     df['st_oddanej_do_pobranej'] = declaredSewage['srednia_deklaracji'] / waterConsumption['srednie_zuzucie_wody']
-    
-    
+
+
     return df
 
-                                                    
+
 def create_map_datapoints(df):
     data_dict = {}
     for index, row in df.iterrows():
         row_dict = {}
 
-        if not np.isnan(row['st_oddanej_do_pobranej']): 
+        if not np.isnan(row['st_oddanej_do_pobranej']):
             row_dict['nr_zbiornika'] = random.choice("ABCDEFGHIJKL") + str(int(random.uniform(10000, 99999)//1))
-            
-            row_dict['st_oddanej_do_pobranej'] = row['st_oddanej_do_pobranej']        
+
+            row_dict['st_oddanej_do_pobranej'] = row['st_oddanej_do_pobranej']
 
         data_dict[row['adres']] = row_dict
     return data_dict
@@ -124,9 +122,9 @@ def create_map_datapoints(df):
 
 def generate_quotient_timeseries_df():
     waterConsumption_raw = pd.read_excel("data/waterConsumption.xlsx")
-    
+
     # counting mean values to account for zeros
-    
+
     for i in range(143):
         if waterConsumption_raw.iloc[i, 6] != 0:
             for j in range(17):
@@ -139,7 +137,7 @@ def generate_quotient_timeseries_df():
                 waterConsumption_raw.iloc[i, 6 + j * 2] = temp / 2
                 waterConsumption_raw.iloc[i, 6 + j * 2 + 1] = temp / 2
         waterConsumption_raw.iloc[i, 40] = waterConsumption_raw.iloc[i, 39]
-    
+
     # zmiana nazw kolumn
     waterConsumption = waterConsumption_raw.drop(['Lp.'], axis = 1)
     c = waterConsumption.columns
@@ -150,9 +148,9 @@ def generate_quotient_timeseries_df():
                                                           c[4]: 'srednie_zuzucie_wody'})
 
     for i in range(5, len(c)-1):
-        waterConsumption = waterConsumption.rename(columns = 
+        waterConsumption = waterConsumption.rename(columns =
                                                    {c[i]: dt.strptime(str(c[i]), '%Y-%m').strftime('%Y-%m')})
-    
+
     declaredSewage_raw = pd.read_excel("data/declaredSewage.xlsx")
     declaredSewage = declaredSewage_raw.drop(['Lp.'], axis = 1)
     c = declaredSewage.columns
@@ -164,46 +162,46 @@ def generate_quotient_timeseries_df():
                                                       c[5]: 'pobrana_woda',
                                                       c[6]: 'pobrana_woda_ogrodowa',
                                                       c[7]: 'nr_pojazdu'})
-    
+
     # drop useless columns
-    waterConsumption = waterConsumption.drop(columns = 
+    waterConsumption = waterConsumption.drop(columns =
                                              ['nr_licznika', 'osoba', 'zuzycie_wody','srednie_zuzucie_wody'])
-    
-    declaredSewage = declaredSewage.drop(columns = ['nr_zbiornika', 'data_odbioru', 'deklaracja_mieszkaniec', 
+
+    declaredSewage = declaredSewage.drop(columns = ['nr_zbiornika', 'data_odbioru', 'deklaracja_mieszkaniec',
                                        'deklaracja_firma', 'pobrana_woda', 'pobrana_woda_ogrodowa', 'nr_pojazdu'])
-    
+
     waterConsumption= waterConsumption.iloc[: , :7]
     declaredSewage = declaredSewage.iloc[:, :7]
-    
+
     df = pd.DataFrame()
-    
+
     df['adres'] = waterConsumption['adres_licznika']
-    
+
     for col_cons, col_decl in zip(waterConsumption.columns[1:], declaredSewage.columns[1:]):
         df[col_cons] = declaredSewage[col_decl] / waterConsumption[col_cons]
-        
+
     df["mean"] = df.iloc[:, 1:].mean(axis = 1)
-    
+
     return df
 
 def graph_quotient_timeseries(df, address):
     row = df[df['adres'] == address]
-    
+
     graph = {}
     graph['name'] = 'quotient_timeseries'
     graph['title'] = "Stosunek wody zadeklarowanej jako ścieki do pobranej na przestrzeni miesięcy"
-    
+
     data_list = []
-    
+
     for col in row.columns[1:-1]:
         temp_dict = {}
         temp_dict['date'] = col
         temp_dict['quotient'] = float(row[col])
-        
+
         data_list.append(temp_dict)
-        
-        
-        
+
+
+
     graph['data'] = data_list
-    
+
     return graph

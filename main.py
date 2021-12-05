@@ -30,7 +30,8 @@ app.add_middleware(
 
 @app.get('/containers')
 async def get_all_containers():
-    data = citizens_data.create_map_datapoints(citizens_data.generate_df())
+    # data = citizens_data.create_map_datapoints(citizens_data.generate_df())
+    data = citizens_data.create_map_datapoints(citizens_data.generate_map_datapoints_df())
 
 
     with open("./data/location_data.json") as f:
@@ -38,27 +39,38 @@ async def get_all_containers():
 
     for v in location_data:
         k = v['name']
-        long = v['longtitude']
-        lat = v['latitude']
-        data[k]['longtitude'] = long
-        data[k]['latitude'] = lat
+        if k in data:
+            long = v['longtitude']
+            lat = v['latitude']
+            data[k]['longtitude'] = long
+            data[k]['latitude'] = lat
 
-    data = [{**{'id':key}, **value} for key, value in data.items()]
+    data = [{**{'id':key}, **value} for key, value in data.items() if value is not None]
+    data.sort(key=lambda x: x['st_oddanej_do_pobranej'])
     return data
 
 @app.get('/containers/default')
 async def get_containers_default():
-    return get_containers_higher_than_percent(0.7)
+    return await get_containers_higher_than_percent(0.7)
 
 @app.get('/containers/{precent}')
 async def get_containers_higher_than_percent(percent: float):
     data = list(filter(lambda x: x and x != {} and 'st_oddanej_do_pobranej' in x and x['st_oddanej_do_pobranej'] < percent, await get_all_containers()))
+    data.sort(key=lambda x: x['st_oddanej_do_pobranej'])
     return data
 
 @app.get('/containers/graphs/{id}/{graph_name}')
 async def get_graph_by_id_graph_name(graph_name: str, id: str):
     data = {"name": graph_name, "title": "Pobrana woda na przestrzeni czasu", "data": [
         {'date': "2019-09", 'water': 10, 'sewage': 15}, {'date': "2019-10", 'water': 11, 'sewage': 20}, {'date': "2019-11", 'water': 14, 'sewage': 20}, {'date': "2019-12", 'water': 15, 'sewage': 20}]}
+    data = {'name': 'deficit_timeseries',
+     'title': 'Stosunek wody zadeklarowanej jako ścieki do pobranej na przestrzeni miesięcy',
+     'data': {'2021-11': 0.8181818181818182,
+      '2021-10': 0.8363636363636363,
+      '2021-9': 0.7083333333333334,
+      '2021-8': 0.6583333333333333,
+      '2021-7': 0.96,
+      '2021-6': 0.95}}
     return data
 
 
@@ -126,10 +138,11 @@ async def get_all_trucks_info():
             json.dump(truck_data, f)
 
     data2 = io.json.read_json('data/trucks_data.json')
-    new_data_frame_final = trucks_data.get_truck_data().join(data2).transpose().to_json()
+    new_data_frame_final = trucks_data.get_truck_data().join(data2)#.to_json()
+    # return new_data_frame_final
     # {"id": str, "comment": str, "checked": bool}
 
-    essa = [{**value,  **{"id":key}} for key, value in json.loads(new_data_frame_final).items()]
+    essa = [{**value,  **{"id":key}} for key, value in json.loads(new_data_frame_final.to_json()).items()]
     return essa
 
 @app.post('/location')
@@ -146,3 +159,109 @@ async def location(loc_str: str, body: Optional[List[str]] = Body(None)):
         loc_list.extend([await ret for ret in loc_list_await if ret is not None])
 
     return [{"latitude": x[0], "longtitude": x[1], "name": x[2]} for x in loc_list if x is not None]
+
+class Switch(BaseModel):
+    id:str
+    value:str = ""
+
+async def update_location_data(body: Switch, inner_value: str):
+    data = {}
+    try:
+        with open('data/s_c_data.json') as f:
+            data = json.load(f)
+    except Exception as e:
+        with open('data/s_c_data.json', 'w+') as f:
+            json.dump(data, f)
+
+    if body.id not in data:
+        data[body.id] = {}
+
+    data[body.id][inner_value] = body.value
+    with open('data/s_c_data.json', 'w+') as f:
+        json.dump(data,f)
+
+async def get_location_data(id: str, inner_value: str):
+    ret = {'id':id,'value': None}
+    try:
+        with open('data/s_c_data.json') as f:
+            data = json.load(f)
+            if id in data:
+                ret = data[id][inner_value]
+    except Exception as e:
+        with open('data/s_c_data.json', 'w+') as f:
+            json.dump({}, f)
+
+    return ret
+
+
+
+# typical crud on notatki and switch zalezne od adresu
+# {id: adress, value: value}
+@app.put('/switch')
+async def make_a_switch(body: Switch = Body(...)):
+    await update_location_data(body, 'switch')
+
+@app.get('/switch/{id}')
+async def get_value_switch(id: str):
+    return await get_location_data(id, 'switch')
+
+@app.put('/comment')
+async def make_a_comment_location(body: Switch = Body(...)):
+    await update_location_data(body, 'comment')
+
+@app.get('/comment/{id}')
+async def get_value_comment(id: str):
+    return await get_location_data(id, 'comment')
+
+
+# ciezaruwa
+
+async def update_data_truck(body: Switch, inner_value: str):
+    data = {}
+    try:
+        with open('data/trucks_data.json') as f:
+            data = json.load(f)
+    except Exception as e:
+        with open('data/trucks_data.json', 'w+') as f:
+            json.dump(data, f)
+
+    # data_payload = json.loads(body)
+
+    if body.id not in data:
+        data[body.id] = {}
+
+    data[body.id][inner_value] = body.value
+    with open('data/trucks_data.json', 'w+') as f:
+        json.dump(data,f)
+
+async def get_data_truck(id: str, inner_value: str):
+    ret = {'id':id,'value': None}
+    try:
+        with open('data/trucks_data.json') as f:
+            data = json.load(f)
+            if id in data:
+                ret = data[id][inner_value]
+    except Exception as e:
+        with open('data/trucks_data.json', 'w+') as f:
+            json.dump({}, f)
+
+    return ret
+
+
+@app.put('/truck/switch')
+async def make_a_switch_for_truck(body: Switch = Body(...)):
+    await update_data_truck(body, 'switch')
+    return ''
+
+@app.get('/truck/switch/{id}')
+async def get_value_switch_for_truck(id: str):
+    return await get_data_truck(id, 'switch')
+
+@app.put('/truck/comment')
+async def make_a_comment_for_truck(body: Switch = Body(...)):
+    await update_data_truck(body, 'comment')
+    return ''
+
+@app.get('/truck/comment/{id}')
+async def get_value_comment_for_truck(id: str):
+    return await get_data_truck(id, 'comment')
