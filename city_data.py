@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def get_mean_time(path1, path2, period):
+def get_mean_time(path1="./data/waterConsumption.xlsx", path2="./data/declaredSewage.xlsx", period=6):
     # path1 - waterConsumption, path2 - declaredSewage, period - how many months into past (max 35)
 
     # get water consumption and declared sewage
@@ -33,11 +33,8 @@ def get_mean_time(path1, path2, period):
     return dates, water_means, sewage_means
 
 
-def get_city_ratio(path1, path2):
+def get_city_ratio(path1="./data/waterConsumption.xlsx", path2="./data/declaredSewage.xlsx"):
     # path1 - waterConsumption, path2 - declared_sewage
     mean_water = pd.read_excel(path1).iloc[:, 5].mean()
     mean_sewage = pd.read_excel(path2).iloc[:, 6].mean()
     return mean_sewage / mean_water
-
-
-print(get_mean_time("data/waterConsumption.xlsx", "data/declaredSewage.xlsx", 6))

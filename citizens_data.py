@@ -205,7 +205,7 @@ def graph_quotient_timeseries(df, address):
 
     graph = {}
     graph['name'] = 'quotient_timeseries'
-    graph['title'] = "Stosunek wody zadeklarowanej jako ścieki do pobranej na przestrzeni miesięcy"
+    graph['title'] = "Stosunek zadeklarowanych ścieków do pobranej wody"
 
     data_list = []
 
