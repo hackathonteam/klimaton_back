@@ -115,8 +115,7 @@ def generate_map_datapoints_df():
     declaredSewage = declaredSewage.drop(columns = ['data_odbioru', 'pobrana_woda', 
                                                         'pobrana_woda_ogrodowa', 'nr_pojazdu'])
     
-    declaredSewage['srednia_deklaracji'] = \
-                   (declaredSewage['deklaracja_mieszkaniec'] + declaredSewage['deklaracja_firma'])/2
+    declaredSewage['srednia_deklaracji'] = declaredSewage['deklaracja_firma']
                    
     declaredSewage = declaredSewage.drop(columns = ['deklaracja_firma', 'deklaracja_mieszkaniec'])
     

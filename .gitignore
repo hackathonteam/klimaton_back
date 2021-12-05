@@ -1,7 +1,7 @@
 .ipynb_checkpoints
 __pycache__
 <<<<<<< HEAD
-data/
+data*
 =======
 *.zip
 >>>>>>> b2957779de8cfc32fe526788c23127f7f5cb9e23
