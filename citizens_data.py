@@ -16,10 +16,11 @@ np. '[Akacjowa 3': {'nr_zbiornika': 'A41312', 'st_oddanej_do_pobranej': 0.626598
 
 
 generate_quotient_timeseries_df() - generuje DataFrame z danymi z timeseries z deklarowanych ścieków
-i pobieranej wody
+i pobieranej wody. Ten DataFrame jest potrzebny do dwóch funkcji poniżej
 
 
 graph_quotient_timeseries(df, address) - generuje graf dla punktu o adresie 'address' z DataFrame'a 'df'
+z stosunkiem wody oddanej do pobranej
 Przykładowy graf ma formę: 
 {
     'name': 'quotient_timeseries',
@@ -31,9 +32,24 @@ Przykładowy graf ma formę:
                 {'date': '2021-08', 'quotient': 0.7096774193548387}, 
                 {'date': '2021-07', 'quotient': 0.7034482758620689}, 
                 {'date': '2021-06', 'quotient': 0.7310344827586207}
-                ]
+            ]
 }
 
+graph_amount_timeseries(df, address) - generuje graf dla punktu o adresie 'address' z DataFrame'a 'df'
+z iloscia wody pobranej i oddanej
+Przykładowy graf ma formę: 
+{
+    'name': 'quotient_timeseries',
+    'title': 'm^3 wody zadeklarowanej jako ścieki i pobranej na przestrzeni miesięcy',
+    'data': [
+                {'date': '2021-11', 'pobrana': 16.5, 'deklarowana': 10.0},
+                {'date': '2021-10', 'pobrana': 16.5, 'deklarowana': 9.6},
+                {'date': '2021-09', 'pobrana': 16.0, 'deklarowana': 9.6},
+                {'date': '2021-08', 'pobrana': 16.0, 'deklarowana': 8.5},
+                {'date': '2021-07', 'pobrana': 15.0, 'deklarowana': 11.1},
+                {'date': '2021-06', 'pobrana': 15.0, 'deklarowana': 10.2}
+            ]
+}
 """
 
 
@@ -181,9 +197,9 @@ def generate_quotient_timeseries_df():
     
     for col_cons, col_decl in zip(waterConsumption.columns[1:], declaredSewage.columns[1:]):
         df[col_cons] = declaredSewage[col_decl] / waterConsumption[col_cons]
+        df["pobrana_" + col_cons] =  waterConsumption[col_cons]
+        df["deklarowana_" + col_cons] = declaredSewage[col_decl] 
         
-    df["mean"] = df.iloc[:, 1:].mean(axis = 1)
-    
     return df
 
 def graph_quotient_timeseries(df, address):
@@ -195,14 +211,40 @@ def graph_quotient_timeseries(df, address):
     
     data_list = []
     
-    for col in row.columns[1:-1]:
-        temp_dict = {}
-        temp_dict['date'] = col
-        temp_dict['quotient'] = float(row[col])
+    for col in row.columns[1:]:
+        # if column is year and not pobrana or deklarowana
+        if re.search("^20.*$", col):
+            temp_dict = {}
+
+            temp_dict['date'] = col
+            temp_dict['quotient'] = float(row[col])
+
+            data_list.append(temp_dict)
         
-        data_list.append(temp_dict)
         
         
+    graph['data'] = data_list
+    
+    return graph
+
+def graph_amount_timeseries(df, address):
+    row = df[df['adres'] == address]
+    
+    graph = {}
+    graph['name'] = 'quotient_timeseries'
+    graph['title'] = "m^3 wody zadeklarowanej jako ścieki i pobranej na przestrzeni miesięcy"
+    
+    data_list = []
+    
+    for col in row.columns[1:]:
+        if re.search("^20.*$", col):
+            temp_dict = {}
+            temp_dict['date'] = col
+            temp_dict['pobrana'] = float(row["pobrana_" + col])
+            temp_dict['deklarowana'] = float(row["deklarowana_" + col])
+            
+            data_list.append(temp_dict)
+
         
     graph['data'] = data_list
     
