@@ -147,7 +147,7 @@ async def get_all_trucks_info():
     # return new_data_frame_final
     # {"id": str, "comment": str, "checked": bool}
 
-    essa = [{**value,  **{"id":key}} for key, value in json.loads(new_data_frame_final.to_json()).items()]
+    essa = [{**value} for key, value in json.loads(new_data_frame_final.to_json()).items()]
     return essa
 
 @app.post('/location')
