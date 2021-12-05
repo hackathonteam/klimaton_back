@@ -55,11 +55,11 @@ async def get_all_containers():
 
 @app.get('/containers/default')
 async def get_containers_default():
-    return await get_containers_higher_than_percent(0.7)
+    return await get_containers_higher_than_percent(70)
 
 @app.get('/containers/{precent}')
-async def get_containers_higher_than_percent(percent: float):
-    data = list(filter(lambda x: x and x != {} and 'st_oddanej_do_pobranej' in x and x['st_oddanej_do_pobranej'] < percent, await get_all_containers()))
+async def get_containers_higher_than_percent(percent: int):
+    data = list(filter(lambda x: x and x != {} and 'st_oddanej_do_pobranej' in x and x['st_oddanej_do_pobranej'] < percent*0.01, await get_all_containers()))
     data.sort(key=lambda x: x['st_oddanej_do_pobranej'])
     return data
 
@@ -71,16 +71,10 @@ async def get_all_data_by_id(id: str):
 
 @app.get('/containers/graphs/{id}/{graph_name}')
 async def get_graph_by_id_graph_name(graph_name: str, id: str):
-    data = {"name": graph_name, "title": "Pobrana woda na przestrzeni czasu", "data": [
-        {'date': "2019-09", 'water': 10, 'sewage': 15}, {'date': "2019-10", 'water': 11, 'sewage': 20}, {'date': "2019-11", 'water': 14, 'sewage': 20}, {'date': "2019-12", 'water': 15, 'sewage': 20}]}
-    data = {'name': 'deficit_timeseries',
-     'title': 'Stosunek wody zadeklarowanej jako ścieki do pobranej na przestrzeni miesięcy',
-     'data': {'2021-11': 0.8181818181818182,
-      '2021-10': 0.8363636363636363,
-      '2021-9': 0.7083333333333334,
-      '2021-8': 0.6583333333333333,
-      '2021-7': 0.96,
-      '2021-6': 0.95}}
+    if graph_name == 'quotient_timeseries':
+        data = citizens_data.graph_quotient_timeseries(citizens_data.generate_quotient_timeseries_df(), id)
+    else:
+        data = citizens_data.graph_amount_timeseries(citizens_data.generate_quotient_timeseries_df(), id)
     return data
 
 
