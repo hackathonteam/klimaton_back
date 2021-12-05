@@ -1,18 +1,15 @@
-from fastapi import FastAPI, File, UploadFile, Body
-from typing import Any, Coroutine, List, Dict, Optional, Tuple
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.responses import RedirectResponse
-import pandas as pd
-from datetime import datetime as dt
 import json
-from pydantic import BaseModel
-from pandas import io
+from datetime import datetime as dt
+from typing import Any, Coroutine, List, Dict, Optional
 
-import trucks_data
+from fastapi import FastAPI, File, Body
+from fastapi.middleware.cors import CORSMiddleware
+from pandas import io
+from pydantic import BaseModel
+
 import citizens_data
 import osmapi
-import city_data
-
+import trucks_data
 
 app = FastAPI()
 
@@ -28,9 +25,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get('/city/details')
 async def get_city_details():
-    return {'id':'Gniezno','ratio': 0.89, 'mean': {'water_means': []}}
+    return {'id': 'Gniezno', 'ratio': 0.89, 'mean': {'water_means': []}}
 
 
 @app.get('/containers')
@@ -49,26 +47,34 @@ async def get_all_containers():
             data[k]['longtitude'] = long
             data[k]['latitude'] = lat
 
-    data = [{**{'id':key}, **value} for key, value in data.items() if value is not None and 'longtitude' in value and value['longtitude'] is not None and 'latitude' in value and value['latitude'] is not None]
+    data = [{**{'id': key}, **value} for key, value in data.items() if
+            value is not None and 'longtitude' in value and value['longtitude'] is not None and 'latitude' in value and
+            value['latitude'] is not None]
     data.sort(key=lambda x: x['st_oddanej_do_pobranej'])
     return data
+
 
 @app.get('/containers/default')
 async def get_containers_default():
     return await get_containers_higher_than_percent(str(70))
 
+
 @app.get('/containers/{precent}')
 async def get_containers_higher_than_percent(percent: str):
     percent_i = int(percent)
-    data = list(filter(lambda x: x and x != {} and 'st_oddanej_do_pobranej' in x and x['st_oddanej_do_pobranej'] < percent_i*0.01, await get_all_containers()))
+    data = list(filter(
+        lambda x: x and x != {} and 'st_oddanej_do_pobranej' in x and x['st_oddanej_do_pobranej'] < percent_i * 0.01,
+        await get_all_containers()))
     data.sort(key=lambda x: x['st_oddanej_do_pobranej'])
     return data
+
 
 @app.get('containers/details/{id}')
 async def get_all_data_by_id(id: str):
     data = await get_all_containers()
     data = list(filter(lambda x: x['id'] == id, data))[0]
     return data
+
 
 class Essa(BaseModel):
     graph_name: str
@@ -83,18 +89,17 @@ async def get_graph_by_id_graph_name(id: str, graph_name: str):
     return data
 
 
-@ app.post("/upload", status_code=200)
+@app.post("/upload", status_code=200)
 async def create_upload_file(
-    declaredSewage: bytes = File(None),
-    realSewage: bytes = File(None),
-    waterConsumption: bytes = File(None),
-    companies: bytes = File(None),
-    meters: bytes = File(None),
-    sewageReception: bytes = File(None),
-    residents: bytes = File(None),
-    containers: bytes = File(None)
+        declaredSewage: bytes = File(None),
+        realSewage: bytes = File(None),
+        waterConsumption: bytes = File(None),
+        companies: bytes = File(None),
+        meters: bytes = File(None),
+        sewageReception: bytes = File(None),
+        residents: bytes = File(None),
+        containers: bytes = File(None)
 ):
-
     files = [
         (declaredSewage, "declaredSewage"),
         (realSewage, 'realSewage'),
@@ -133,31 +138,33 @@ async def last_uploaded():
     except Exception:
         return {}
 
+
 # ciezaruwy
 
 @app.get('/trucks')
 async def get_all_trucks_info():
     # trucks_data: Dict[str, Any]
     try:
-        with open("data/trucks_data.json","r") as f:
-            truck_data =json.load(f)
+        with open("data/trucks_data.json", "r") as f:
+            truck_data = json.load(f)
     except Exception as e:
         truck_data = {}
-        with open("data/trucks_data.json","w+") as f:
+        with open("data/trucks_data.json", "w+") as f:
             json.dump(truck_data, f)
 
     data2 = io.json.read_json('data/trucks_data.json')
-    new_data_frame_final = trucks_data.get_truck_data().join(data2)#.to_json()
+    new_data_frame_final = trucks_data.get_truck_data().join(data2)  # .to_json()
     # return new_data_frame_final
     # {"id": str, "comment": str, "checked": bool}
 
     essa = [{**value} for key, value in json.loads(new_data_frame_final.to_json()).items()]
     return essa
 
+
 @app.post('/location')
 async def location(loc_str: str, body: Optional[List[str]] = Body(None)):
     loc_list: List[osmapi.Location_Type] = []
-    loc_list_await: List[Coroutine[Any, Any,osmapi.Location_Type]] = []
+    loc_list_await: List[Coroutine[Any, Any, osmapi.Location_Type]] = []
     if body:
         for elem in body:
             ret = osmapi.getLocation(elem)
@@ -169,9 +176,11 @@ async def location(loc_str: str, body: Optional[List[str]] = Body(None)):
 
     return [{"latitude": x[0], "longtitude": x[1], "name": x[2]} for x in loc_list if x is not None]
 
+
 class Switch(BaseModel):
-    id:str
-    value:str = ""
+    id: str
+    value: str = ""
+
 
 async def update_location_data(body: Switch, inner_value: str):
     data = {}
@@ -187,10 +196,11 @@ async def update_location_data(body: Switch, inner_value: str):
 
     data[body.id][inner_value] = body.value
     with open('data/s_c_data.json', 'w+') as f:
-        json.dump(data,f)
+        json.dump(data, f)
+
 
 async def get_location_data(id: str, inner_value: str):
-    ret = {'id':id,'value': None}
+    ret = {'id': id, 'value': None}
     try:
         with open('data/s_c_data.json') as f:
             data = json.load(f)
@@ -203,20 +213,22 @@ async def get_location_data(id: str, inner_value: str):
     return ret
 
 
-
 # typical crud on notatki and switch zalezne od adresu
 # {id: adress, value: value}
 @app.put('/switch')
 async def make_a_switch(body: Switch = Body(...)):
     await update_location_data(body, 'switch')
 
+
 @app.get('/switch/{id}')
 async def get_value_switch(id: str):
     return await get_location_data(id, 'switch')
 
+
 @app.put('/comment')
 async def make_a_comment_location(body: Switch = Body(...)):
     await update_location_data(body, 'comment')
+
 
 @app.get('/comment/{id}')
 async def get_value_comment(id: str):
@@ -241,10 +253,11 @@ async def update_data_truck(body: Switch, inner_value: str):
 
     data[body.id][inner_value] = body.value
     with open('data/trucks_data.json', 'w+') as f:
-        json.dump(data,f)
+        json.dump(data, f)
+
 
 async def get_data_truck(id: str, inner_value: str):
-    ret = {'id':id,'value': None}
+    ret = {'id': id, 'value': None}
     try:
         with open('data/trucks_data.json') as f:
             data = json.load(f)
@@ -262,14 +275,17 @@ async def make_a_switch_for_truck(body: Switch = Body(...)):
     await update_data_truck(body, 'switch')
     return ''
 
+
 @app.get('/truck/switch/{id}')
 async def get_value_switch_for_truck(id: str):
     return await get_data_truck(id, 'switch')
+
 
 @app.put('/truck/comment')
 async def make_a_comment_for_truck(body: Switch = Body(...)):
     await update_data_truck(body, 'comment')
     return ''
+
 
 @app.get('/truck/comment/{id}')
 async def get_value_comment_for_truck(id: str):
