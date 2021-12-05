@@ -96,10 +96,10 @@ def group_by_id(dekl_vs_odb):
                                     'Data odbioru ścieków': 'collectionDate',
                                     'Różnica': 'difference'})
     sum_vs = sum_vs[['plates', 'companyName', 'collectionDate', 'hour', 'address', sum_vs.columns[1], 'realSewage', 'difference']]
-    return sum_vs.where(sum_vs["difference"] != 0).dropna(axis=0)
+    return sum_vs
 
 
 def get_truck_data():
     odebrane, deklarowane = get_data("./data/sewageReception.xlsx", "./data/declaredSewage.xlsx")
     odebrane, deklarowane = data_preprocessing(odebrane, deklarowane)
-    return group_by_id(join_table(odebrane, deklarowane))
+    return group_by_id(join_table(odebrane, deklarowane)).trasnpose()
