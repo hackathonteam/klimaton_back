@@ -43,6 +43,11 @@ def data_preprocessing(odebrane, deklarowane):
     odebrane["id"] = odebrane['Data odbioru ścieków'].astype('string') + ' ' + odebrane[
         'Godzina zrzutu ścieków'] + ' ' + odebrane['Nr pojazdu\n* nr rejestracyjny'].astype('string')
 
+    # repair hours
+    for i in range(odebrane.shape[0]):
+        if odebrane['Godzina zrzutu ścieków'].iloc[i][-2] == ':':
+            odebrane.iloc[i, odebrane.columns.get_loc('Godzina zrzutu ścieków')] += '0'
+
     # adresy jako lista
     odebrane['adres'] = np.empty((len(odebrane), 0)).tolist()
     for i in range(odebrane.shape[0]):
@@ -61,6 +66,8 @@ def join_table(odebrane, deklarowane):
     dekl_vs_odb.loc[:, dekl_vs_odb.columns[1]] = dekl_vs_odb[dekl_vs_odb.columns[1]].astype('string')
     # add id consisting of date and hour
     dekl_vs_odb.loc[:, "id"] = odebrane["id"]
+    # add hours
+    dekl_vs_odb['hour'] = odebrane['Godzina zrzutu ścieków']
     return dekl_vs_odb
 
 
@@ -70,6 +77,7 @@ def group_by_id(dekl_vs_odb):
     # group by id using aggregation functions
     sum_vs = dekl_vs_odb.groupby("id").sum()
     sum_vs["Nr rejestracyjny pojazdu"] = dekl_vs_odb.groupby("id").min()["Nr pojazdu\n* nr rejestracyjny"]
+    sum_vs['hour'] = dekl_vs_odb.groupby("id").min()["hour"]
     sum_vs["Adres"] = dekl_vs_odb.groupby("id").max()["adres"]
     sum_vs["Data odbioru ścieków"] = dekl_vs_odb.groupby("id").max()["Data odbioru ścieków"].astype('string')
     sum_vs["Różnica"] = sum_vs[sum_vs.columns[1]] - sum_vs[sum_vs.columns[0]]
@@ -77,9 +85,8 @@ def group_by_id(dekl_vs_odb):
 
     # add copmany names
     sum_vs["companyName"] = ""
-    print(sum_vs.shape)
     for i in range(sum_vs.shape[0]):
-        sum_vs.iloc[i, 6] = get_company_name(companies, str(sum_vs.iloc[i, 2]))
+        sum_vs.iloc[i, 7] = get_company_name(companies, str(sum_vs.iloc[i, 2]))
 
     # rename columns and change order
     sum_vs = sum_vs.rename(columns={'Ilość odprowadzonych ścieków\n[m3]x1000': 'realSewage',
@@ -88,11 +95,11 @@ def group_by_id(dekl_vs_odb):
                                     'Adres': 'address',
                                     'Data odbioru ścieków': 'collectionDate',
                                     'Różnica': 'difference'})
-    sum_vs = sum_vs[['plates', 'companyName', 'collectionDate', 'address', sum_vs.columns[1], 'realSewage', 'difference']]
+    sum_vs = sum_vs[['plates', 'companyName', 'collectionDate', 'hour', 'address', sum_vs.columns[1], 'realSewage', 'difference']]
     return sum_vs.where(sum_vs["difference"] != 0).dropna(axis=0)
 
 
 def get_truck_data():
     odebrane, deklarowane = get_data("./data/sewageReception.xlsx", "./data/declaredSewage.xlsx")
     odebrane, deklarowane = data_preprocessing(odebrane, deklarowane)
-    return group_by_id(join_table(odebrane, deklarowane)).transpose()
+    return group_by_id(join_table(odebrane, deklarowane))
