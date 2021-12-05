@@ -212,7 +212,7 @@ def generate_quotient_timeseries_df():
     return df
 
 def graph_quotient_timeseries(df, address):
-    row = df[df['adres'] == address]
+    row = df[df['adres'] == address].iloc[0]
     
     graph = {}
     graph['name'] = 'quotient_timeseries'
@@ -220,13 +220,13 @@ def graph_quotient_timeseries(df, address):
     
     data_list = []
     
-    for col in row.columns[1:]:
+    for col in df[df['adres'] == address].columns[1:]:
         # if column is year and not pobrana or deklarowana
         if re.search("^20.*$", col):
             temp_dict = {}
 
             temp_dict['date'] = col
-            temp_dict['quotient'] = float(row[col])
+            temp_dict['quotient'] = row.loc[col]
 
             data_list.append(temp_dict)
         
@@ -236,7 +236,7 @@ def graph_quotient_timeseries(df, address):
     return graph
 
 def graph_amount_timeseries(df, address):
-    row = df[df['adres'] == address]
+    row = df[df['adres'] == address].iloc[0]
     
     graph = {}
     graph['name'] = 'amount_timeseries'
@@ -244,12 +244,12 @@ def graph_amount_timeseries(df, address):
     
     data_list = []
     
-    for col in row.columns[1:]:
+    for col in df[df['adres'] == address].columns[1:]:
         if re.search("^20.*$", col):
             temp_dict = {}
             temp_dict['date'] = col
-            temp_dict['pobrana'] = float(row["pobrana_" + col])
-            temp_dict['deklarowana'] = float(row["deklarowana_" + col])
+            temp_dict['pobrana'] = row.loc["pobrana_" + col]
+            temp_dict['deklarowana'] = row.loc["deklarowana_" + col]
             
             data_list.append(temp_dict)
 
