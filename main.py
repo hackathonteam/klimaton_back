@@ -55,11 +55,12 @@ async def get_all_containers():
 
 @app.get('/containers/default')
 async def get_containers_default():
-    return await get_containers_higher_than_percent(70)
+    return await get_containers_higher_than_percent(str(70))
 
 @app.get('/containers/{precent}')
-async def get_containers_higher_than_percent(percent: int):
-    data = list(filter(lambda x: x and x != {} and 'st_oddanej_do_pobranej' in x and x['st_oddanej_do_pobranej'] < percent*0.01, await get_all_containers()))
+async def get_containers_higher_than_percent(percent: str):
+    percent_i = int(percent)
+    data = list(filter(lambda x: x and x != {} and 'st_oddanej_do_pobranej' in x and x['st_oddanej_do_pobranej'] < percent_i*0.01, await get_all_containers()))
     data.sort(key=lambda x: x['st_oddanej_do_pobranej'])
     return data
 
